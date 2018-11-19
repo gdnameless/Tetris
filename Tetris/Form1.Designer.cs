@@ -30,7 +30,8 @@
         {
             this.components = new System.ComponentModel.Container();
             this.Canvas = new System.Windows.Forms.PictureBox();
-            this.timer1 = new System.Windows.Forms.Timer(this.components);
+            this.DrawTimer = new System.Windows.Forms.Timer(this.components);
+            this.GhostTimer = new System.Windows.Forms.Timer(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.Canvas)).BeginInit();
             this.SuspendLayout();
             // 
@@ -44,11 +45,18 @@
             this.Canvas.TabStop = false;
             this.Canvas.Click += new System.EventHandler(this.Canvas_Click);
             this.Canvas.MouseDown += new System.Windows.Forms.MouseEventHandler(this.Canvas_MouseDown);
+            this.Canvas.MouseEnter += new System.EventHandler(this.Canvas_MouseEnter);
+            this.Canvas.MouseLeave += new System.EventHandler(this.Canvas_MouseLeave);
             this.Canvas.MouseUp += new System.Windows.Forms.MouseEventHandler(this.Canvas_MouseUp);
             // 
-            // timer1
+            // DrawTimer
             // 
-            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
+            this.DrawTimer.Tick += new System.EventHandler(this.timer1_Tick);
+            // 
+            // GhostTimer
+            // 
+            this.GhostTimer.Interval = 16;
+            this.GhostTimer.Tick += new System.EventHandler(this.GhostTimer_Tick);
             // 
             // Form1
             // 
@@ -57,8 +65,10 @@
             this.BackColor = System.Drawing.Color.Black;
             this.ClientSize = new System.Drawing.Size(762, 631);
             this.Controls.Add(this.Canvas);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.MaximizeBox = false;
             this.Name = "Form1";
-            this.Text = "Form1";
+            this.Text = "Tetris";
             this.Shown += new System.EventHandler(this.Form1_Shown);
             this.Click += new System.EventHandler(this.Form1_Click);
             this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.Form1_MouseDown);
@@ -70,7 +80,8 @@
         #endregion
 
         private System.Windows.Forms.PictureBox Canvas;
-        private System.Windows.Forms.Timer timer1;
+        private System.Windows.Forms.Timer DrawTimer;
+        private System.Windows.Forms.Timer GhostTimer;
     }
 }
 

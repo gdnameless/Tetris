@@ -12,7 +12,7 @@ namespace Tetris
 
         #region variable declarations
 
-        (int InitialDelay, int RepeatDelay) DAS; //not used yet
+        public (int InitialDelay, int RepeatDelay) DAS = (400, 6); //not used yet
 
         public enum Blocks
         {
@@ -28,44 +28,60 @@ namespace Tetris
         }
 
         byte[,] Board;
+        bool[,] GhostBoard;
 
-        (int Width, int Height) Size;
+        public (int Width, int Height) Size;
 
-        int Blocksize, Blocksize_;
+        public int Blocksize, Blocksize_;
+
+        Bitmap image;
+        Graphics g;
+        SolidBrush p;
+        Pen pen;
 
         #endregion
 
-        public Tetris(int Width = 10, int Height = 21, int Blocksize = 20, int InitialDelay = 400, int RepeatDelay = 6)
+        public Tetris(int Width = 10, int Height = 21, int Blocksize = 20) //Constructor
         {
             Size = (Width, Height);
             Board = new byte[Size.Width, Size.Height];
-            for (int i = 0; i < Board.Length; i++)
-            {
-                Board[i / Size.Height, i % Size.Width] = (byte)Blocks.empty;
-            }
+            GhostBoard = new bool[Size.Width, Size.Height];
             this.Blocksize = Blocksize;
             Blocksize_ = Blocksize + 1;
-            DAS = (InitialDelay, RepeatDelay);
-        } //Constructor, probably move DAS somewhere else
+            image = new Bitmap(Size.Width * Blocksize_ + 1, Size.Height * Blocksize_ + 1); //space for the lines inbetween and the border lines
+            g = Graphics.FromImage(image);
+            pen = new Pen(Color.Black);
+            p = new SolidBrush(Color.DimGray);
+        }
 
         #region functions
 
-        public Bitmap PlaceBlock((int x, int y) Pos, byte blockType, bool Overwrite = false)
+        public Bitmap PlaceBlock((int x, int y) Pos, byte blockType, bool Real = true, bool Overwrite = false)
         {
+            for (int x = 0; x < GhostBoard.GetLength(0); x++)
+            {
+                for (int y = 0; y < GhostBoard.GetLength(1); y++)
+                {
+                    if (GhostBoard[x, y] == false) Board[x, y] = (byte)Blocks.empty;
+                    GhostBoard[x, y] = true;
+                }
+            }
             try
             {
                 Pos.x = Pos.x / Blocksize_;
                 Pos.y = Pos.y / Blocksize_;
                 if (!Overwrite)
                 {
-                    if (Board[Pos.x, Pos.y] == (byte)Blocks.empty)
+                    if (Board[Pos.x, Pos.y] == ((byte)Blocks.empty))
                     {
                         Board[Pos.x, Pos.y] = blockType;
+                        GhostBoard[Pos.x, Pos.y] = Real;
                     }
                 }
                 else
                 {
                     Board[Pos.x, Pos.y] = blockType;
+                    GhostBoard[Pos.x, Pos.y] = Real;
                 }
             }
             catch
@@ -75,8 +91,16 @@ namespace Tetris
             return Draw();
         }
 
-        public Bitmap PlaceBlocks(List<(int x, int y, byte)> BlockList, bool Overwrite = false)
+        public Bitmap PlaceBlocks(List<(int x, int y, byte)> BlockList, bool Real = true, bool Overwrite = false)
         {
+            for (int x = 0; x < GhostBoard.GetLength(0); x++)
+            {
+                for (int y = 0; y < GhostBoard.GetLength(1); y++)
+                {
+                    if (GhostBoard[x, y] == false) Board[x, y] = (byte)Blocks.empty;
+                    GhostBoard[x, y] = true;
+                }
+            }
             try
             {
                 if (!Overwrite)
@@ -88,6 +112,7 @@ namespace Tetris
                         if (Board[X, Y] == (byte)Blocks.empty)
                         {
                             Board[X, Y] = b;
+                            GhostBoard[X, Y] = Real;
                         }
                     }
                 }
@@ -98,6 +123,7 @@ namespace Tetris
                         int X = x / Blocksize_;
                         int Y = y / Blocksize_;
                         Board[X, Y] = b;
+                        GhostBoard[X, Y] = Real;
                     }
                 }
             }
@@ -110,10 +136,9 @@ namespace Tetris
 
         public Bitmap Draw()
         {
-            Bitmap image = new Bitmap(Size.Width * Blocksize_ + 1, Size.Height * Blocksize_ + 1); //space for the lines inbetween and the border lines
-            Graphics g = Graphics.FromImage(image);
-            SolidBrush p = new SolidBrush(Color.Green);
-            Pen pen = new Pen(Color.Black);
+            p.Color = Color.DimGray;
+            g.FillRectangle(p, 0, 0, image.Width, image.Height);
+            p.Color = Color.Black;
             for (int y = 0; y < Board.GetLength(1); y++)
             {
                 for (int x = 0; x < Board.GetLength(0); x++)
@@ -123,7 +148,7 @@ namespace Tetris
                         switch (Board[x, y])
                         {
                             case (byte)Blocks.garbage:
-                                p.Color = Color.SlateGray;
+                                p.Color = Color.LightGray;
                                 break;
                             case (byte)Blocks.I:
                                 p.Color = Color.DeepSkyBlue;
@@ -138,7 +163,7 @@ namespace Tetris
                                 p.Color = Color.Yellow;
                                 break;
                             case (byte)Blocks.S:
-                                p.Color = Color.Green;
+                                p.Color = Color.LimeGreen;
                                 break;
                             case (byte)Blocks.T:
                                 p.Color = Color.Purple;
@@ -147,6 +172,7 @@ namespace Tetris
                                 p.Color = Color.Red;
                                 break;
                         }
+                        if (!GhostBoard[x, y]) p.Color = Color.FromArgb(128, p.Color);
                         g.FillRectangle(p, x * Blocksize_ + 1, y * Blocksize_ + 1, Blocksize, Blocksize);
                     }
                 }
