@@ -33,7 +33,7 @@ namespace Tetris
             L,
             J,
             garbage
-        }
+        } //all the used blocks
 
         #endregion
 
@@ -41,7 +41,7 @@ namespace Tetris
 
         (int, int) GetMouseRelative()
         {
-            return (MousePosition.X - Location.X - 20, MousePosition.Y - Location.Y - 43);
+            return (MousePosition.X - Location.X - 20, MousePosition.Y - Location.Y - 43); //gets mouse position relative to Canvas
         }
 
         #endregion
@@ -51,26 +51,28 @@ namespace Tetris
         private void Canvas_MouseDown(object sender, MouseEventArgs e)
         {
             drawing = true;
-            g.DrawImage(Game.PlaceBlock(GetMouseRelative(), (byte)i, true, true), 0, 0);
-            DrawTimer.Interval = 100;
-            DrawTimer.Start();
+            Game.UpdateBlock(GetMouseRelative(), (byte)i, true); //sets block
+            g.DrawImage(Game.image, 0, 0); //draws to Canvas
+            DrawTimer.Interval = 100; //DAS for the mouse
+            DrawTimer.Start(); //starts drawing
         }
 
         private void Canvas_MouseUp(object sender, MouseEventArgs e)
         {
             drawing = false;
-            DrawTimer.Stop();
+            DrawTimer.Stop(); //stops drawing
         }
 
-        private void timer1_Tick(object sender, EventArgs e)
+        private void DrawTimer_Tick(object sender, EventArgs e)
         {
-            DrawTimer.Interval = 16;
-            g.DrawImage(Game.PlaceBlock(GetMouseRelative(), (byte)i, true, true), 0, 0);
+            DrawTimer.Interval = 8;
+            Game.UpdateBlock(GetMouseRelative(), (byte)i, true); //sets block
+            g.DrawImage(Game.image, 0, 0); //draws to Canvas
         }
 
         private void Canvas_MouseEnter(object sender, EventArgs e)
         {
-            if (drawing)
+            if (drawing) //don't draw ghostblocks if currently drawing real blocks
             {
                 GhostTimer.Stop();
             }
@@ -80,28 +82,34 @@ namespace Tetris
             }
         }
 
-        private void Canvas_MouseLeave(object sender, EventArgs e)
+        private void Canvas_MouseLeave(object sender, EventArgs e) //stops redrawing ghostblocks when mouse outside of Canvas
         {
             GhostTimer.Stop();
         }
 
-        private void GhostTimer_Tick(object sender, EventArgs e)
+        private void GhostTimer_Tick(object sender, EventArgs e) //redraws ghostblocks
         {
-            g.DrawImage(Game.PlaceBlock(GetMouseRelative(), (byte)i, false), 0, 0);
+            Game.UpdateBlock(GetMouseRelative(), (byte)i, false); //sets ghostblock at mouse position
+            g.DrawImage(Game.image, 0, 0); //draws to Canvas
         }
 
-        private void Form1_MouseWheel(object sender, MouseEventArgs e)
+        private void Form1_MouseWheel(object sender, MouseEventArgs e) //scroll
         {
-            if (e.Delta > 0)
+            if (e.Delta > 0) //scroll up
             {
                 i++;
                 i %= 9;
             }
-            else
+            else //scroll down
             {
                 i--;
                 if (i < 0) i = 8;
             }
+        }
+
+        private void Form1_Shown(object sender, EventArgs e)
+        {
+            g = Canvas.CreateGraphics(); //makes drawing on Canvas (Picturebox) possible
         }
 
         #endregion
@@ -109,44 +117,17 @@ namespace Tetris
         public Form1() //Constructor
         {
             InitializeComponent();
-            MouseWheel += Form1_MouseWheel;
+
+            MouseWheel += Form1_MouseWheel; //adds a MouseEventHandler to handle scrolling
+
+            //set size according to board size
             Canvas.Size = new Size(Game.Size.Width * Game.Blocksize_ + 1, Game.Size.Height * Game.Blocksize_ + 1);
             Size = new Size(Canvas.Size.Width + 39, Canvas.Size.Height + 62);
         }
 
         #region unimportant
 
-        private void Form1_Shown(object sender, EventArgs e)
-        {
-            g = Canvas.CreateGraphics();
-            //Game.Draw();
-        }
-
-        private void Form1_Click(object sender, EventArgs e)
-        {
-            //g.DrawImage(Game.PlaceBlock(GetMouseRelative(), (byte)(i++ % 8 + 1)), 0, 0);
-        }
-
-        private void Canvas_Click(object sender, EventArgs e)
-        {
-            //g.DrawImage(Game.PlaceBlock(GetMouseRelative(), (byte)(i++ % 8 + 1)), 0, 0);
-        }
-
-        private void Canvas_LoadCompleted(object sender, AsyncCompletedEventArgs e)
-        {
-            //g = Canvas.CreateGraphics();
-            //Game.Draw();
-        }
-
-        private void Canvas_Paint(object sender, PaintEventArgs e)
-        {
-            //Game.Draw();
-        }
-
-        private void Form1_MouseDown(object sender, MouseEventArgs e)
-        {
-
-        }
+        //cleared unnecessary code
 
         #endregion
     }

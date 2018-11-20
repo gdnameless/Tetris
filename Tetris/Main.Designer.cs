@@ -43,7 +43,6 @@
             this.Canvas.Size = new System.Drawing.Size(738, 607);
             this.Canvas.TabIndex = 0;
             this.Canvas.TabStop = false;
-            this.Canvas.Click += new System.EventHandler(this.Canvas_Click);
             this.Canvas.MouseDown += new System.Windows.Forms.MouseEventHandler(this.Canvas_MouseDown);
             this.Canvas.MouseEnter += new System.EventHandler(this.Canvas_MouseEnter);
             this.Canvas.MouseLeave += new System.EventHandler(this.Canvas_MouseLeave);
@@ -51,11 +50,11 @@
             // 
             // DrawTimer
             // 
-            this.DrawTimer.Tick += new System.EventHandler(this.timer1_Tick);
+            this.DrawTimer.Tick += new System.EventHandler(this.DrawTimer_Tick);
             // 
             // GhostTimer
             // 
-            this.GhostTimer.Interval = 16;
+            this.GhostTimer.Interval = 8;
             this.GhostTimer.Tick += new System.EventHandler(this.GhostTimer_Tick);
             // 
             // Form1
@@ -70,8 +69,6 @@
             this.Name = "Form1";
             this.Text = "Tetris";
             this.Shown += new System.EventHandler(this.Form1_Shown);
-            this.Click += new System.EventHandler(this.Form1_Click);
-            this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.Form1_MouseDown);
             ((System.ComponentModel.ISupportInitialize)(this.Canvas)).EndInit();
             this.ResumeLayout(false);
 
