@@ -51,6 +51,7 @@ namespace Tetris
         private void Canvas_MouseDown(object sender, MouseEventArgs e)
         {
             drawing = true;
+            GhostTimer.Stop(); //don't draw ghostblocks if currently drawing real blocks
             Game.UpdateBlock(GetMouseRelative(), (byte)i, true); //sets block
             g.DrawImage(Game.image, 0, 0); //draws to Canvas
             DrawTimer.Interval = 100; //DAS for the mouse
@@ -61,6 +62,7 @@ namespace Tetris
         {
             drawing = false;
             DrawTimer.Stop(); //stops drawing
+            GhostTimer.Start(); //reenable ghostblocks
         }
 
         private void DrawTimer_Tick(object sender, EventArgs e)
@@ -85,10 +87,16 @@ namespace Tetris
         private void Canvas_MouseLeave(object sender, EventArgs e) //stops redrawing ghostblocks when mouse outside of Canvas
         {
             GhostTimer.Stop();
+            Game.UpdateBlock((-1, -1), 0, false); //removes last ghostblock when leaving window
+            g.DrawImage(Game.image, 0, 0);
         }
 
         private void GhostTimer_Tick(object sender, EventArgs e) //redraws ghostblocks
         {
+            if (drawing) //don't draw ghostblocks if currently drawing real blocks
+            {
+                GhostTimer.Stop();
+            }
             Game.UpdateBlock(GetMouseRelative(), (byte)i, false); //sets ghostblock at mouse position
             g.DrawImage(Game.image, 0, 0); //draws to Canvas
         }
@@ -119,6 +127,8 @@ namespace Tetris
             InitializeComponent();
 
             MouseWheel += Form1_MouseWheel; //adds a MouseEventHandler to handle scrolling
+
+            //Cursor.Hide();
 
             //set size according to board size
             Canvas.Size = new Size(Game.Size.Width * Game.Blocksize_ + 1, Game.Size.Height * Game.Blocksize_ + 1);
