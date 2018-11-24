@@ -21,6 +21,8 @@ namespace Tetris
         Graphics g;
 
         Tetris Game = new Tetris();
+        Tetromino Piece = new Tetromino((byte)Blocks.T);
+        Controls Keys = new Controls();
 
         public enum Blocks
         {
@@ -34,6 +36,18 @@ namespace Tetris
             J,
             garbage
         } //all the used blocks
+
+        enum Actions
+        {
+            Left,
+            Right,
+            SoftDrop,
+            HardDrop,
+            RotateCW,
+            RotateCCW,
+            Hold,
+            Nothing
+        } //possible actions
 
         #endregion
 
@@ -135,10 +149,42 @@ namespace Tetris
             Size = new Size(Canvas.Size.Width + 39, Canvas.Size.Height + 62);
         }
 
-        #region unimportant
-
-        //cleared unnecessary code
-
-        #endregion
+        private void Form1_KeyDown(object sender, KeyEventArgs e)
+        {
+            //Piece.SetBlock((byte)i);
+            int Action = Keys.EvaluateKey(e.KeyValue);
+            switch (Action)
+            {
+                case (int)Actions.HardDrop:
+                    Game.UpdateTetromino(Piece.CurrentPiece, Piece.Pos, Piece.Piece);
+                    break;
+                case (int)Actions.Right:
+                    Piece.Pos.x++;
+                    Game.UpdateTetromino(Piece.CurrentPiece, Piece.Pos, Piece.Piece);
+                    break;
+                case (int)Actions.Left:
+                    Piece.Pos.x--;
+                    Game.UpdateTetromino(Piece.CurrentPiece, Piece.Pos, Piece.Piece);
+                    break;
+                case (int)Actions.RotateCCW:
+                    Piece.RotateCounterClockwise();
+                    Game.UpdateTetromino(Piece.CurrentPiece, Piece.Pos, Piece.Piece);
+                    break;
+                case (int)Actions.RotateCW:
+                    Piece.RotateClockwise();
+                    Game.UpdateTetromino(Piece.CurrentPiece, Piece.Pos, Piece.Piece);
+                    break;
+                case (int)Actions.SoftDrop:
+                    Piece.Pos.y++;
+                    Game.UpdateTetromino(Piece.CurrentPiece, Piece.Pos, Piece.Piece);
+                    break;
+                case (int)Actions.Hold:
+                    Piece.SetBlock((byte)i);
+                    Game.UpdateTetromino(Piece.CurrentPiece, Piece.Pos, Piece.Piece);
+                    break;
+            }
+            g.DrawImage(Game.image, 0, 0); //draws to Canvas
+            //MessageBox.Show(e.KeyValue.ToString());
+        }
     }
 }

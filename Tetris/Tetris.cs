@@ -27,13 +27,17 @@ namespace Tetris
             garbage
         } //all the used blocks
 
-        byte[,] Board, GhostBoard; //Values in board determine the block type, one board for regular blocks, one for ghostblocks
+        byte[,] VisibleBoard, Fullboard, GhostBoard; //Values in board determine the block type, one board for regular blocks, one for ghostblocks
 
         (int x, int y) LastGhost; //keeps track of last ghostblock
 
         public (int Width, int Height) Size; //determines board size
 
         public int Blocksize, Blocksize_; //blocksize and blocksize + 1 (because I needed it surprisingly often)
+
+        public byte HoldSlot;
+
+        (int x, int y, byte[,] Piece) LastPiece;
 
         //needed for drawing
         public Bitmap image;
@@ -44,12 +48,13 @@ namespace Tetris
 
         #endregion
 
-        public Tetris(int Width = 10, int Height = 21, int Blocksize = 20) //constructor
+        public Tetris(int Width = 10, int Height = 20, int Blocksize = 20) //constructor
         {
             //initializing custom board settings and boards
             Size = (Width, Height);
-            Board = new byte[Size.Width, Size.Height];
+            VisibleBoard = new byte[Size.Width, Size.Height];
             GhostBoard = new byte[Size.Width, Size.Height];
+            Fullboard = new byte[Size.Width, Size.Height * 2];
             this.Blocksize = Blocksize;
             Blocksize_ = Blocksize + 1;
 
@@ -162,6 +167,8 @@ namespace Tetris
             GhostBoard[LastGhost.x, LastGhost.y] = (byte)Blocks.empty;
             DrawBlock(LastGhost);
 
+            bool Drawn = false;
+
             try
             {
                 //translates mouse position (origin point top left corner of the board) to the corresponding block on the board
@@ -172,29 +179,61 @@ namespace Tetris
                 {
                     if (Real) //real block
                     {
-                        Board[Pos.x, Pos.y] = blockType;
+                        VisibleBoard[Pos.x, Pos.y] = blockType;
+                        for (int i = 0; i < Size.Width; i++) //checks if a line is filled
+                        {
+                            if (VisibleBoard[i, Pos.y] == (byte)Blocks.empty)
+                            {
+                                break;
+                            }
+                            if (i == Size.Width - 1)
+                            {
+                                ClearLine(Pos.y); //clears the line if it's filled
+                                //RedrawBoard(); //redraws the board
+                                Drawn = true;
+                            }
+                        }
                     }
                     else //ghostblock
                     {
                         GhostBoard[Pos.x, Pos.y] = blockType;
                         LastGhost = (Pos.x, Pos.y);
                     }
-                    DrawBlock(Pos); //draws the changed block on the bitmap
+                    if (!Drawn)
+                    {
+                        DrawBlock(Pos); //draws the changed block on the bitmap
+                    }
                 }
                 else
                 {
-                    if (!Real || Board[Pos.x, Pos.y] == ((byte)Blocks.empty)) //ghostblocks can be shown on top of real blocks but real blocks cannot be overwritten
+                    if (!Real || VisibleBoard[Pos.x, Pos.y] == ((byte)Blocks.empty)) //ghostblocks can be shown on top of real blocks but real blocks cannot be overwritten
                     {
                         if (Real) //real block
                         {
-                            Board[Pos.x, Pos.y] = blockType;
+                            VisibleBoard[Pos.x, Pos.y] = blockType;
+                            for (int i = 0; i < Size.Width; i++) //checks if a line is filled
+                            {
+                                if (VisibleBoard[i, Pos.y] == (byte)Blocks.empty)
+                                {
+                                    break;
+                                }
+                                if (i == Size.Width - 1)
+                                {
+                                    ClearLine(Pos.y); //clears the line if it's filled
+                                    //RedrawBoard(); //redraws the board
+                                    Drawn = true;
+                                }
+                            }
                         }
                         else //ghostblock
                         {
                             GhostBoard[Pos.x, Pos.y] = blockType;
                             LastGhost = (Pos.x, Pos.y);
                         }
-                        DrawBlock(Pos); //draws the changed block on the bitmap
+                        if (!Drawn)
+                        {
+                            DrawBlock(Pos); //draws the changed block on the bitmap
+                        }
                     }
                 }
             }
@@ -202,6 +241,102 @@ namespace Tetris
             {
 
             }
+        }
+
+        public void ClearLine(int y, bool Redraw = true) //clears given line and moves the other lines down by one
+        {
+            for (int h = y; h >= 0; h--) //height
+            {
+                for (int w = 0; w < Size.Width; w++) //width
+                {
+                    if (h == 0) //this would be the top row
+                    {
+                        VisibleBoard[w, h] = (byte)Blocks.empty;
+                    }
+                    else
+                    {
+                        VisibleBoard[w, h] = VisibleBoard[w, h - 1]; //copies row on top
+                    }
+                }
+            }
+            if (Redraw)
+            {
+
+                RedrawBoard(y); //redraws the board
+            }
+        }
+
+        public void CheckLineClears() //checks for filled lines and clears them
+        {
+            bool Updated = false;
+            for (int h = Size.Height; h >= 0; h--) //height
+            {
+                for (int i = 0; i < Size.Width; i++) //checks if a line is filled
+                {
+                    if (VisibleBoard[i, h] == (byte)Blocks.empty)
+                    {
+                        break;
+                    }
+                    if (i == Size.Width - 1)
+                    {
+                        ClearLine(h, false); //clears the line if it's filled
+                        Updated = true;
+                    }
+                }
+            }
+            if (Updated)
+            {
+                RedrawBoard(Size.Height); //redraws the board
+            }
+        }
+
+        public void UpdateTetromino(byte[,] Tetromino, (int x, int y) Pos, byte Piece)
+        {
+            try
+            {
+                for (int y = 0; y < 4; y++)
+                {
+                    for (int x = 0; x < 4; x++)
+                    {
+                        if (LastPiece.Piece[x, y] == 1)
+                        {
+                            UpdateTetrominoBlock((LastPiece.x + x, LastPiece.y + y), (byte)Blocks.empty);
+                        }
+                    }
+                }
+            }
+            catch
+            {
+
+            }
+            LastPiece = (Pos.x, Pos.y, Tetromino);
+            try
+            {
+                for (int y = 0; y < 4; y++)
+                {
+                    for (int x = 0; x < 4; x++)
+                    {
+                        if (Tetromino[x, y] != 0)
+                        {
+                            UpdateTetrominoBlock((Pos.x + x, Pos.y + y), Piece);
+                        }
+                    }
+                }
+                RedrawBoard();
+            }
+            catch
+            {
+                
+            }
+        }
+
+        public void UpdateTetrominoBlock((int x, int y) Pos, byte blockType) //updates a single block on the board and then draws it to the image Bitmap, might edit the parameters
+        {
+            //clears the ghostblock
+            GhostBoard[LastGhost.x, LastGhost.y] = (byte)Blocks.empty;
+            DrawBlock(LastGhost);
+            
+            VisibleBoard[Pos.x, Pos.y] = blockType;
         }
 
         public void UpdateBlocks(List<(int x, int y, byte)> BlockList, bool Real, bool Overwrite = true) //this might get used once we actually draw tetrominoes, not commented yet because currently unused
@@ -223,7 +358,7 @@ namespace Tetris
                     {
                         if (Real)
                         {
-                            Board[x, y] = b;
+                            VisibleBoard[x, y] = b;
                         }
                         else
                         {
@@ -236,11 +371,11 @@ namespace Tetris
                 {
                     foreach ((int x, int y, byte b) in BlockList)
                     {
-                        if (!Real || Board[x, y] == ((byte)Blocks.empty))
+                        if (!Real || VisibleBoard[x, y] == ((byte)Blocks.empty))
                         {
                             if (Real)
                             {
-                                Board[x, y] = b;
+                                VisibleBoard[x, y] = b;
                             }
                             else
                             {
@@ -260,7 +395,7 @@ namespace Tetris
         public void DrawBlock((int x, int y) Pos)
         {
             //draw real block
-            switch (Board[Pos.x, Pos.y])
+            switch (VisibleBoard[Pos.x, Pos.y])
             {
                 case (byte)Blocks.empty:
                     brush.Color = BackgroundColor;
@@ -324,6 +459,157 @@ namespace Tetris
                     break;
             }
             graphics.FillRectangle(brush, Pos.x * Blocksize_ + 1, Pos.y * Blocksize_ + 1, Blocksize, Blocksize);
+        }
+
+        public void RedrawBoard()
+        {
+            //draw real block
+            for (int y = 0; y < Size.Height; y++)
+            {
+                for (int x = 0; x < Size.Width; x++)
+                {
+                    //draw real blocks
+                    switch (VisibleBoard[x, y])
+                    {
+                        case (byte)Blocks.empty:
+                            brush.Color = BackgroundColor;
+                            break;
+                        case (byte)Blocks.garbage:
+                            brush.Color = Color.LightGray;
+                            break;
+                        case (byte)Blocks.I:
+                            brush.Color = Color.FromArgb(0x00, 0x9F, 0xDA);
+                            break;
+                        case (byte)Blocks.J:
+                            brush.Color = Color.FromArgb(0x00, 0x65, 0xBD);
+                            break;
+                        case (byte)Blocks.L:
+                            brush.Color = Color.FromArgb(0xFF, 0x79, 0x00);
+                            break;
+                        case (byte)Blocks.O:
+                            brush.Color = Color.FromArgb(0xFE, 0xCB, 0x00);
+                            break;
+                        case (byte)Blocks.S:
+                            brush.Color = Color.FromArgb(0x69, 0xBE, 0x28);
+                            break;
+                        case (byte)Blocks.T:
+                            brush.Color = Color.FromArgb(0x95, 0x2D, 0x98);
+                            break;
+                        case (byte)Blocks.Z:
+                            brush.Color = Color.FromArgb(0xED, 0x29, 0x39);
+                            break;
+                    }
+                    graphics.FillRectangle(brush, x * Blocksize_ + 1, y * Blocksize_ + 1, Blocksize, Blocksize);
+
+                    //draw ghostblock with transparency
+                    switch (GhostBoard[x, y])
+                    {
+                        case (byte)Blocks.empty:
+                            brush.Color = Color.FromArgb(0x40, BackgroundColor);
+                            break;
+                        case (byte)Blocks.garbage:
+                            brush.Color = Color.FromArgb(0x40, Color.LightGray);
+                            break;
+                        case (byte)Blocks.I:
+                            brush.Color = Color.FromArgb(0x40, 0x00, 0x9F, 0xDA);
+                            break;
+                        case (byte)Blocks.J:
+                            brush.Color = Color.FromArgb(0x40, 0x00, 0x65, 0xBD);
+                            break;
+                        case (byte)Blocks.L:
+                            brush.Color = Color.FromArgb(0x40, 0xFF, 0x79, 0x00);
+                            break;
+                        case (byte)Blocks.O:
+                            brush.Color = Color.FromArgb(0x40, 0xFE, 0xCB, 0x00);
+                            break;
+                        case (byte)Blocks.S:
+                            brush.Color = Color.FromArgb(0x40, 0x69, 0xBE, 0x28);
+                            break;
+                        case (byte)Blocks.T:
+                            brush.Color = Color.FromArgb(0x40, 0x95, 0x2D, 0x98);
+                            break;
+                        case (byte)Blocks.Z:
+                            brush.Color = Color.FromArgb(0x40, 0xED, 0x29, 0x39);
+                            break;
+                    }
+                    graphics.FillRectangle(brush, x * Blocksize_ + 1, y * Blocksize_ + 1, Blocksize, Blocksize);
+                }
+            }
+        }
+
+        public void RedrawBoard(int Y) //redraws the board from a vertical line upwards
+        {
+            for (int y = Y; y >= 0; y--)
+            {
+                for (int x = 0; x < Size.Width; x++)
+                {
+                    //draw real blocks
+                    switch (VisibleBoard[x, y])
+                    {
+                        case (byte)Blocks.empty:
+                            brush.Color = BackgroundColor;
+                            break;
+                        case (byte)Blocks.garbage:
+                            brush.Color = Color.LightGray;
+                            break;
+                        case (byte)Blocks.I:
+                            brush.Color = Color.FromArgb(0x00, 0x9F, 0xDA);
+                            break;
+                        case (byte)Blocks.J:
+                            brush.Color = Color.FromArgb(0x00, 0x65, 0xBD);
+                            break;
+                        case (byte)Blocks.L:
+                            brush.Color = Color.FromArgb(0xFF, 0x79, 0x00);
+                            break;
+                        case (byte)Blocks.O:
+                            brush.Color = Color.FromArgb(0xFE, 0xCB, 0x00);
+                            break;
+                        case (byte)Blocks.S:
+                            brush.Color = Color.FromArgb(0x69, 0xBE, 0x28);
+                            break;
+                        case (byte)Blocks.T:
+                            brush.Color = Color.FromArgb(0x95, 0x2D, 0x98);
+                            break;
+                        case (byte)Blocks.Z:
+                            brush.Color = Color.FromArgb(0xED, 0x29, 0x39);
+                            break;
+                    }
+                    graphics.FillRectangle(brush, x * Blocksize_ + 1, y * Blocksize_ + 1, Blocksize, Blocksize);
+
+                    //draw ghostblock with transparency
+                    switch (GhostBoard[x, y])
+                    {
+                        case (byte)Blocks.empty:
+                            brush.Color = Color.FromArgb(0x40, BackgroundColor);
+                            break;
+                        case (byte)Blocks.garbage:
+                            brush.Color = Color.FromArgb(0x40, Color.LightGray);
+                            break;
+                        case (byte)Blocks.I:
+                            brush.Color = Color.FromArgb(0x40, 0x00, 0x9F, 0xDA);
+                            break;
+                        case (byte)Blocks.J:
+                            brush.Color = Color.FromArgb(0x40, 0x00, 0x65, 0xBD);
+                            break;
+                        case (byte)Blocks.L:
+                            brush.Color = Color.FromArgb(0x40, 0xFF, 0x79, 0x00);
+                            break;
+                        case (byte)Blocks.O:
+                            brush.Color = Color.FromArgb(0x40, 0xFE, 0xCB, 0x00);
+                            break;
+                        case (byte)Blocks.S:
+                            brush.Color = Color.FromArgb(0x40, 0x69, 0xBE, 0x28);
+                            break;
+                        case (byte)Blocks.T:
+                            brush.Color = Color.FromArgb(0x40, 0x95, 0x2D, 0x98);
+                            break;
+                        case (byte)Blocks.Z:
+                            brush.Color = Color.FromArgb(0x40, 0xED, 0x29, 0x39);
+                            break;
+                    }
+                    graphics.FillRectangle(brush, x * Blocksize_ + 1, y * Blocksize_ + 1, Blocksize, Blocksize);
+                }
+            }
         }
 
         /*public Bitmap Draw()
