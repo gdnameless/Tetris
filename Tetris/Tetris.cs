@@ -316,7 +316,7 @@ namespace Tetris
                 {
                     for (int x = 0; x < 4; x++)
                     {
-                        if (Tetromino[x, y] != 0)
+                        if (Tetromino[x, y] == 1)
                         {
                             UpdateTetrominoBlock((Pos.x + x, Pos.y + y), Piece);
                         }

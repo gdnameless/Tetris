@@ -16,7 +16,7 @@ namespace Tetris
         public Tetromino(byte Piece)
         {
             this.Piece = Piece;
-            Pos = (5, 0);
+            Pos = (4, 0);
             SetBlock(Piece);
         }
 
@@ -56,54 +56,54 @@ namespace Tetris
                 case (byte)Blocks.J:
                     Piece = (byte)Blocks.J;
                     CurrentPiece = new byte[,] {
-                        { 0, 0, 0, 0 },
                         { 1, 0, 0, 0 },
                         { 1, 1, 1, 0 },
+                        { 0, 0, 0, 0 },
                         { 0, 0, 0, 0 }
                     };
                     break;
                 case (byte)Blocks.L:
                     Piece = (byte)Blocks.L;
                     CurrentPiece = new byte[,] {
-                        { 0, 0, 0, 0 },
                         { 0, 0, 1, 0 },
                         { 1, 1, 1, 0 },
+                        { 0, 0, 0, 0 },
                         { 0, 0, 0, 0 }
                     };
                     break;
                 case (byte)Blocks.O:
                     Piece = (byte)Blocks.O;
                     CurrentPiece = new byte[,] {
+                        { 1, 1, 0, 0 },
+                        { 1, 1, 0, 0 },
                         { 0, 0, 0, 0 },
-                        { 0, 1, 1, 0 },
-                        { 0, 1, 1, 0 },
                         { 0, 0, 0, 0 }
                     };
                     break;
                 case (byte)Blocks.S:
                     Piece = (byte)Blocks.S;
                     CurrentPiece = new byte[,] {
-                        { 0, 0, 0, 0 },
                         { 0, 1, 1, 0 },
                         { 1, 1, 0, 0 },
+                        { 0, 0, 0, 0 },
                         { 0, 0, 0, 0 }
                     };
                     break;
                 case (byte)Blocks.T:
                     Piece = (byte)Blocks.T;
                     CurrentPiece = new byte[,] {
-                        { 0, 0, 0, 0 },
                         { 0, 1, 0, 0 },
                         { 1, 1, 1, 0 },
+                        { 0, 0, 0, 0 },
                         { 0, 0, 0, 0 }
                     };
                     break;
                 case (byte)Blocks.Z:
                     Piece = (byte)Blocks.Z;
                     CurrentPiece = new byte[,] {
-                        { 0, 0, 0, 0 },
                         { 1, 1, 0, 0 },
                         { 0, 1, 1, 0 },
+                        { 0, 0, 0, 0 },
                         { 0, 0, 0, 0 }
                     };
                     break;
@@ -131,19 +131,7 @@ namespace Tetris
 
         public void RotateClockwise()
         {
-            if (Piece != (byte)Blocks.I)
-            {
-                byte[,] temp = new byte[4, 4];
-                for (int y = 1; y < 4; y++)
-                {
-                    for (int x = 0; x < 3; x++)
-                    {
-                        temp[x, y] = CurrentPiece[y - 1, 3 - x];
-                    }
-                }
-                CurrentPiece = temp;
-            }
-            else if (Piece != (byte)Blocks.O)
+            if (Piece == (byte)Blocks.I)
             {
                 byte[,] temp = new byte[4, 4];
                 for (int y = 0; y < 4; y++)
@@ -155,23 +143,26 @@ namespace Tetris
                 }
                 CurrentPiece = temp;
             }
-        }
-
-        public void RotateCounterClockwise()
-        {
-            if (Piece != (byte)Blocks.I)
+            else if (Piece != (byte)Blocks.O)
             {
                 byte[,] temp = new byte[4, 4];
-                for (int y = 1; y < 4; y++)
+                for (int y = 0; y < 3; y++)
                 {
                     for (int x = 0; x < 3; x++)
                     {
-                        temp[x, y] = CurrentPiece[3 - y, x + 1];
+                        temp[x, y] = CurrentPiece[y, 2 - x];
                     }
                 }
                 CurrentPiece = temp;
             }
-            else if (Piece != (byte)Blocks.O)
+
+            //O rotation has no effect
+
+        }
+
+        public void RotateCounterClockwise()
+        {
+            if (Piece == (byte)Blocks.I)
             {
                 byte[,] temp = new byte[4, 4];
                 for (int y = 0; y < 4; y++)
@@ -183,6 +174,21 @@ namespace Tetris
                 }
                 CurrentPiece = temp;
             }
+            else if (Piece != (byte)Blocks.O)
+            {
+                byte[,] temp = new byte[4, 4];
+                for (int y = 0; y < 3; y++)
+                {
+                    for (int x = 0; x < 3; x++)
+                    {
+                        temp[x, y] = CurrentPiece[2 - y, x];
+                    }
+                }
+                CurrentPiece = temp;
+            }
+
+            //O rotation has no effect
+
         }
     }
 }
