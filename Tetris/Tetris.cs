@@ -12,6 +12,8 @@ namespace Tetris
 
         #region variable declarations
 
+        Random r = new Random();
+
         public (int InitialDelay, int RepeatDelay) DAS = (400, 6); //not used yet
 
         public enum Blocks
@@ -37,7 +39,10 @@ namespace Tetris
 
         public byte HoldSlot;
 
-        ((int x, int y) Position, (byte x, byte y)[] BlockPositions) LastPiece;
+        ((int x, int y) Position, (byte x, byte y)[] BlockPositions) LastPiece = ((-1, -1), new(byte, byte)[4]);
+
+        byte[] Bag = new byte[7];
+        int BagPiece = 7;
 
         //needed for drawing
         public Bitmap image;
@@ -161,6 +166,32 @@ namespace Tetris
             return Draw();
         }*/
 
+        public byte NextPiece()
+        {
+            if (BagPiece == 7)
+            {
+                BagPiece = 0;
+                GenerateBag();
+            }
+            return Bag[BagPiece++];
+        }
+
+        void GenerateBag()
+        {
+            byte[] temp = new byte[7];
+            byte newNumber;
+            for (int i = 0; i < temp.Length; i++)
+            {
+                newNumber = (byte)(r.Next(1, 8));
+                if (!temp.Contains(newNumber))
+                {
+                    temp[i] = newNumber;
+                }
+                else i--;
+            }
+            Bag = temp;
+        }
+
         public void UpdateBlock((int x, int y) Pos, byte blockType, bool Real, bool Overwrite = true) //updates a single block on the board and then draws it to the image Bitmap, might edit the parameters
         {
             //clears the ghostblock
@@ -269,7 +300,7 @@ namespace Tetris
         public void CheckLineClears() //checks for filled lines and clears them
         {
             bool Updated = false;
-            for (int h = Size.Height; h >= 0; h--) //height
+            for (int h = 0; h < Size.Height; h++) //height
             {
                 for (int i = 0; i < Size.Width; i++) //checks if a line is filled
                 {
@@ -279,7 +310,7 @@ namespace Tetris
                     }
                     if (i == Size.Width - 1)
                     {
-                        ClearLine(h, false); //clears the line if it's filled
+                        ClearLine(h); //clears the line if it's filled
                         Updated = true;
                     }
                 }
@@ -351,6 +382,23 @@ namespace Tetris
                     UpdateTetrominoBlock((Tetromino[i].x + Pos.x, Tetromino[i].y + Pos.y), Piece);
                 }
                 RedrawBoard();
+            }
+            catch
+            {
+
+            }
+        }
+
+        public void Harddrop((byte x, byte y)[] Tetromino, (int x, int y) Pos, byte Piece)
+        {
+            try
+            {
+                for (int i = 0; i < 4; i++)
+                {
+                    VisibleBoard[Pos.x + Tetromino[i].x, Pos.y + Tetromino[i].y] = Piece;
+                }
+                LastPiece = ((-1, -1), new (byte, byte)[4]);
+                CheckLineClears();
             }
             catch
             {

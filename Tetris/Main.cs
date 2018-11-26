@@ -147,6 +147,7 @@ namespace Tetris
             //set size according to board size
             Canvas.Size = new Size(Game.Size.Width * Game.Blocksize_ + 1, Game.Size.Height * Game.Blocksize_ + 1);
             Size = new Size(Canvas.Size.Width + 39, Canvas.Size.Height + 62);
+            Game.NextPiece();
         }
 
         private void Form1_KeyDown(object sender, KeyEventArgs e)
@@ -155,6 +156,9 @@ namespace Tetris
             switch (Action)
             {
                 case (int)Actions.HardDrop:
+                    Game.Harddrop(Piece.FromAnchorPoint(), Piece.Pos, Piece.Piece);
+                    Piece.Pos = (5, 0);
+                    Piece.SetBlock(Game.NextPiece());
                     Game.UpdateTetromino(Piece.FromAnchorPoint(), Piece.Pos, Piece.Piece);
                     break;
                 case (int)Actions.Right:
