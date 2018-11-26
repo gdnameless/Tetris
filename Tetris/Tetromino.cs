@@ -129,6 +129,20 @@ namespace Tetris
             return CurrentPiece;
         }
 
+        public (byte, byte)[] FromAnchorPoint()
+        {
+            (byte, byte)[] temp = new (byte, byte)[4];
+            int i = 0;
+            for (byte y = 0; y < 4; y++)
+            {
+                for (byte x = 0; x < 4; x++)
+                {
+                    if (CurrentPiece[x, y] == 1) temp[i++] = (x, y);
+                }
+            }
+            return temp;
+        }
+
         public void RotateClockwise()
         {
             if (Piece == (byte)Blocks.I)

@@ -37,7 +37,7 @@ namespace Tetris
 
         public byte HoldSlot;
 
-        (int x, int y, byte[,] Piece) LastPiece;
+        ((int x, int y) Position, (byte x, byte y)[] BlockPositions) LastPiece;
 
         //needed for drawing
         public Bitmap image;
@@ -290,7 +290,7 @@ namespace Tetris
             }
         }
 
-        public void UpdateTetromino(byte[,] Tetromino, (int x, int y) Pos, byte Piece)
+        /*public void UpdateTetromino(byte[,] Tetromino, (int x, int y) Pos, byte Piece)
         {
             try
             {
@@ -327,6 +327,34 @@ namespace Tetris
             catch
             {
                 
+            }
+        }*/
+
+        public void UpdateTetromino((byte x, byte y)[] Tetromino, (int x, int y) Pos, byte Piece)
+        {
+            try
+            {
+                for (int i = 0; i < 4; i++)
+                {
+                    UpdateTetrominoBlock((LastPiece.BlockPositions[i].x + LastPiece.Position.x, LastPiece.BlockPositions[i].y + LastPiece.Position.y), (byte)Blocks.empty);
+                }
+            }
+            catch
+            {
+
+            }
+            LastPiece = ((Pos.x, Pos.y), Tetromino);
+            try
+            {
+                for (int i = 0; i < 4; i++)
+                {
+                    UpdateTetrominoBlock((Tetromino[i].x + Pos.x, Tetromino[i].y + Pos.y), Piece);
+                }
+                RedrawBoard();
+            }
+            catch
+            {
+
             }
         }
 
