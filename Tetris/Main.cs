@@ -46,6 +46,7 @@ namespace Tetris
             RotateCW,
             RotateCCW,
             Hold,
+            Up,
             Nothing
         } //possible actions
 
@@ -153,37 +154,112 @@ namespace Tetris
         private void Form1_KeyDown(object sender, KeyEventArgs e)
         {
             int Action = Keys.EvaluateKey(e.KeyValue);
+            bool temp;
             switch (Action)
             {
                 case (int)Actions.HardDrop:
                     Game.Harddrop(Piece.FromAnchorPoint(), Piece.Pos, Piece.Piece);
                     Piece.Pos = (5, 0);
+                    Piece.TempPos = (5, 0);
+                    Piece.currentRotation = 0;
+                    Piece.previousRotation = 0;
                     Piece.SetBlock(Game.NextPiece());
-                    Game.UpdateTetromino(Piece.FromAnchorPoint(), Piece.Pos, Piece.Piece);
+                    Piece.UpdatePiece(Game.CheckCollision(Piece.FromAnchorPoint(), Piece.Pos, Piece.Piece));
                     break;
                 case (int)Actions.Right:
-                    Piece.Pos.x++;
-                    Game.UpdateTetromino(Piece.FromAnchorPoint(), Piece.Pos, Piece.Piece);
+                    Piece.TempPos.x++;
+                    if (Game.CheckCollision(Piece.FromAnchorPoint(), Piece.TempPos, Piece.Piece))
+                    {
+                        Piece.Pos.x++;
+                    }
+                    else
+                    {
+                        Piece.TempPos.x--;
+                    }
                     break;
                 case (int)Actions.Left:
-                    Piece.Pos.x--;
-                    Game.UpdateTetromino(Piece.FromAnchorPoint(), Piece.Pos, Piece.Piece);
+                    Piece.TempPos.x--;
+                    if (Game.CheckCollision(Piece.FromAnchorPoint(), Piece.TempPos, Piece.Piece))
+                    {
+                        Piece.Pos.x--;
+                    }
+                    else
+                    {
+                        Piece.TempPos.x++;
+                    }
+                    Game.CheckCollision(Piece.FromAnchorPoint(), Piece.TempPos, Piece.Piece);
                     break;
                 case (int)Actions.RotateCCW:
                     Piece.RotateCounterClockwise();
-                    Game.UpdateTetromino(Piece.FromAnchorPoint(), Piece.Pos, Piece.Piece);
+                    temp = false;
+                    while (!temp)
+                    {
+                        if (Piece.PerformSRS())
+                        {
+                            if (Game.CheckCollision(Piece.FromAnchorPoint(), Piece.TempPos, Piece.Piece))
+                            {
+                                Piece.UpdatePiece(true);
+                                temp = true;
+                            }
+                        }
+                        else
+                        {
+                            Piece.UpdatePiece(false);
+                            temp = true;
+                        }
+                    }
+                    Game.CheckCollision(Piece.FromAnchorPoint(), Piece.TempPos, Piece.Piece);
                     break;
                 case (int)Actions.RotateCW:
                     Piece.RotateClockwise();
-                    Game.UpdateTetromino(Piece.FromAnchorPoint(), Piece.Pos, Piece.Piece);
+                    temp = false;
+                    while (!temp)
+                    {
+                        if (Piece.PerformSRS())
+                        {
+                            if (Game.CheckCollision(Piece.FromAnchorPoint(), Piece.TempPos, Piece.Piece))
+                            {
+                                Piece.UpdatePiece(true);
+                                temp = true;
+                            }
+                        }
+                        else
+                        {
+                            Piece.UpdatePiece(false);
+                            temp = true;
+                        }
+                    }
+                    Game.CheckCollision(Piece.FromAnchorPoint(), Piece.TempPos, Piece.Piece);
                     break;
                 case (int)Actions.SoftDrop:
-                    Piece.Pos.y++;
-                    Game.UpdateTetromino(Piece.FromAnchorPoint(), Piece.Pos, Piece.Piece);
+                    Piece.TempPos.y++;
+                    if (Game.CheckCollision(Piece.FromAnchorPoint(), Piece.TempPos, Piece.Piece))
+                    {
+                        Piece.Pos.y++;
+                    }
+                    else
+                    {
+                        Piece.TempPos.y--;
+                    }
+                    break;
+                case (int)Actions.Up:
+                    Piece.TempPos.y--;
+                    if (Game.CheckCollision(Piece.FromAnchorPoint(), Piece.TempPos, Piece.Piece))
+                    {
+                        Piece.Pos.y--;
+                    }
+                    else
+                    {
+                        Piece.TempPos.y++;
+                    }
                     break;
                 case (int)Actions.Hold:
                     Piece.SetBlock((byte)i);
-                    Game.UpdateTetromino(Piece.FromAnchorPoint(), Piece.Pos, Piece.Piece);
+                    Piece.Pos = (5, 0);
+                    Piece.TempPos = (5, 0);
+                    Piece.currentRotation = 0;
+                    Piece.previousRotation = 0;
+                    Piece.UpdatePiece(Game.CheckCollision(Piece.FromAnchorPoint(), Piece.Pos, Piece.Piece));
                     break;
             }
             g.DrawImage(Game.image, 0, 0);

@@ -8,14 +8,37 @@ namespace Tetris
 {
     class Tetromino
     {
-        public byte Piece, rotation = (byte)Rotation.north;
-        public (int x, int y) Pos;
+        public byte Piece, previousRotation = (byte)Rotation.north, currentRotation = (byte)Rotation.north, SRSIteration = 0;
+        public (int x, int y) Pos, TempPos;
 
-        public byte[,] CurrentPiece = new byte[4, 4];
+        public byte[,] CurrentPiece = new byte[4, 4], TempPiece = new byte[4, 4];
+
+        (short x, short y)[,] SRSJLSTZTable = new(short, short)[,] {
+            { ( 0, 0), (-1, 0), (-1, 1), ( 0,-2), (-1,-2) },
+            { ( 0, 0), ( 1, 0), ( 1,-1), ( 0, 2), ( 1, 2) },
+            { ( 0, 0), ( 1, 0), ( 1,-1), ( 0, 2), ( 1, 2) },
+            { ( 0, 0), (-1, 0), (-1, 1), ( 0,-2), (-1,-2) },
+            { ( 0, 0), ( 1, 0), ( 1, 1), ( 0,-2), ( 1,-2) },
+            { ( 0, 0), (-1, 0), (-1,-1), ( 0, 2), (-1, 2) },
+            { ( 0, 0), (-1, 0), (-1,-1), ( 0, 2), (-1, 2) },
+            { ( 0, 0), ( 1, 0), ( 1, 1), ( 0,-2), ( 1,-2) }
+        };
+
+        (short x, short y)[,] SRSITable = new(short, short)[,] {
+            { ( 0, 0), (-2, 0), ( 1, 0), (-2,-1), ( 1, 2) },
+            { ( 0, 0), ( 2, 0), (-1, 0), ( 2, 1), (-1,-2) },
+            { ( 0, 0), (-1, 0), ( 2, 0), (-1, 2), ( 2,-1) },
+            { ( 0, 0), ( 1, 0), (-2, 0), ( 1,-2), (-2, 1) },
+            { ( 0, 0), ( 2, 0), (-1, 0), ( 2, 1), (-1,-2) },
+            { ( 0, 0), (-2, 0), ( 1, 0), (-2,-1), ( 1, 2) },
+            { ( 0, 0), ( 1, 0), (-2, 0), ( 1,-2), (-2, 1) },
+            { ( 0, 0), (-1, 0), ( 2, 0), (-1, 2), ( 2,-1) }
+        };
 
         public Tetromino(byte Piece)
         {
             this.Piece = Piece;
+            TempPos = (4, 0);
             Pos = (4, 0);
             SetBlock(Piece);
         }
@@ -39,6 +62,80 @@ namespace Tetris
             south,
             west
         } //rotations
+
+        public bool PerformSRS()
+        {
+            if (SRSIteration > 4)
+            {
+                SRSIteration = 0;
+                currentRotation = previousRotation;
+                return false;
+            }
+
+            byte row = 0;
+            if (previousRotation == 0)
+            {
+                if (currentRotation == 1)
+                {
+                    row = 0;
+                }
+                else if (currentRotation == 3)
+                {
+                    row = 7;
+                }
+            }
+            else if (previousRotation == 1)
+            {
+                if (currentRotation == 0)
+                {
+                    row = 1;
+                }
+                else if (currentRotation == 2)
+                {
+                    row = 2;
+                }
+            }
+            else if (previousRotation == 2)
+            {
+                if (currentRotation == 1)
+                {
+                    row = 3;
+                }
+                else if (currentRotation == 3)
+                {
+                    row = 4;
+                }
+            }
+            else if (previousRotation == 3)
+            {
+                if (currentRotation == 2)
+                {
+                    row = 5;
+                }
+                else if (currentRotation == 0)
+                {
+                    row = 6;
+                }
+            }
+            TempPos = Pos;
+            switch (Piece)
+            {
+                case (byte)Blocks.I:
+                    TempPos.x += SRSITable[row, SRSIteration].x;
+                    TempPos.y -= SRSITable[row, SRSIteration].y;
+                    break;
+                case (byte)Blocks.O:
+                    SRSIteration = 0;
+                    previousRotation = currentRotation;
+                    return false;
+                default:
+                    TempPos.x += SRSJLSTZTable[row, SRSIteration].x;
+                    TempPos.y -= SRSJLSTZTable[row, SRSIteration].y;
+                    break;
+            }
+            SRSIteration++;
+            return true;
+        }
 
         public byte[,] SetBlock(byte Tetromino)
         {
@@ -125,19 +222,22 @@ namespace Tetris
                     temp[x, y] = CurrentPiece[y, x];
                 }
             }
+            TempPiece = temp;
             CurrentPiece = temp;
-            return CurrentPiece;
+            currentRotation = 0;
+            previousRotation = 0;
+            return TempPiece;
         }
 
         public (byte, byte)[] FromAnchorPoint()
         {
-            (byte, byte)[] temp = new (byte, byte)[4];
+            (byte, byte)[] temp = new(byte, byte)[4];
             int i = 0;
             for (byte y = 0; y < 4; y++)
             {
                 for (byte x = 0; x < 4; x++)
                 {
-                    if (CurrentPiece[x, y] == 1) temp[i++] = (x, y);
+                    if (TempPiece[x, y] == 1) temp[i++] = (x, y);
                 }
             }
             return temp;
@@ -155,7 +255,7 @@ namespace Tetris
                         temp[x, y] = CurrentPiece[y, 3 - x];
                     }
                 }
-                CurrentPiece = temp;
+                TempPiece = temp;
             }
             else if (Piece != (byte)Blocks.O)
             {
@@ -167,11 +267,12 @@ namespace Tetris
                         temp[x, y] = CurrentPiece[y, 2 - x];
                     }
                 }
-                CurrentPiece = temp;
+                TempPiece = temp;
             }
 
             //O rotation has no effect
 
+            currentRotation = (byte)((currentRotation + 1) % 4);
         }
 
         public void RotateCounterClockwise()
@@ -186,7 +287,7 @@ namespace Tetris
                         temp[x, y] = CurrentPiece[3 - y, x];
                     }
                 }
-                CurrentPiece = temp;
+                TempPiece = temp;
             }
             else if (Piece != (byte)Blocks.O)
             {
@@ -198,11 +299,29 @@ namespace Tetris
                         temp[x, y] = CurrentPiece[2 - y, x];
                     }
                 }
-                CurrentPiece = temp;
+                TempPiece = temp;
             }
 
             //O rotation has no effect
 
+            currentRotation = (byte)((currentRotation + 3) % 4);
+        }
+
+        public void UpdatePiece(bool valid)
+        {
+            if (valid)
+            {
+                CurrentPiece = TempPiece;
+                previousRotation = currentRotation;
+                Pos = TempPos;
+            }
+            else
+            {
+                TempPiece = CurrentPiece;
+                currentRotation = previousRotation;
+                TempPos = Pos;
+            }
+            SRSIteration = 0;
         }
     }
 }

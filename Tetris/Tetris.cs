@@ -361,7 +361,7 @@ namespace Tetris
             }
         }*/
 
-        public void UpdateTetromino((byte x, byte y)[] Tetromino, (int x, int y) Pos, byte Piece)
+        public bool CheckCollision((byte x, byte y)[] Tetromino, (int x, int y) Pos, byte Piece)
         {
             try
             {
@@ -374,6 +374,37 @@ namespace Tetris
             {
 
             }
+            try
+            {
+                for (int i = 0; i < 4; i++)
+                {
+                    if (VisibleBoard[Tetromino[i].x + Pos.x, Tetromino[i].y + Pos.y] != (byte)Blocks.empty)
+                    {
+                        return false;
+                    }
+                }
+                UpdateTetromino(Tetromino, Pos, Piece);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public void UpdateTetromino((byte x, byte y)[] Tetromino, (int x, int y) Pos, byte Piece)
+        {
+            /*try
+            {
+                for (int i = 0; i < 4; i++)
+                {
+                    UpdateTetrominoBlock((LastPiece.BlockPositions[i].x + LastPiece.Position.x, LastPiece.BlockPositions[i].y + LastPiece.Position.y), (byte)Blocks.empty);
+                }
+            }
+            catch
+            {
+
+            }*/
             LastPiece = ((Pos.x, Pos.y), Tetromino);
             try
             {

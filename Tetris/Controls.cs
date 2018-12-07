@@ -17,10 +17,11 @@ namespace Tetris
             RotateCW,
             RotateCCW,
             Hold,
+            Up,
             Nothing
         }
 
-        int[] Keys = new int[] { 37, 39, 40, 32, 88, 89, 67 };
+        int[] Keys = new int[] { 37, 39, 40, 32, 88, 89, 67, 38 };
 
         public int EvaluateKey(int Key)
         {
