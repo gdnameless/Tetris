@@ -21,7 +21,7 @@ namespace Tetris
             Nothing
         }
 
-        int[] Keys = new int[] { 37, 39, 40, 32, 88, 89, 67, 38 };
+        public int[] Keys = new int[] { 23, 25, 26, 18, 67, 68, 46, 24 };
 
         public int EvaluateKey(int Key)
         {

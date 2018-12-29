@@ -32,6 +32,7 @@
             this.Canvas = new System.Windows.Forms.PictureBox();
             this.DrawTimer = new System.Windows.Forms.Timer(this.components);
             this.GhostTimer = new System.Windows.Forms.Timer(this.components);
+            this.KeyPressedTimer = new System.Windows.Forms.Timer(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.Canvas)).BeginInit();
             this.SuspendLayout();
             // 
@@ -58,6 +59,12 @@
             this.GhostTimer.Interval = 8;
             this.GhostTimer.Tick += new System.EventHandler(this.GhostTimer_Tick);
             // 
+            // KeyPressedTimer
+            // 
+            this.KeyPressedTimer.Enabled = true;
+            this.KeyPressedTimer.Interval = 1;
+            this.KeyPressedTimer.Tick += new System.EventHandler(this.KeyPressedTimer_Tick);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -70,7 +77,6 @@
             this.Name = "Form1";
             this.Text = "Tetris";
             this.Shown += new System.EventHandler(this.Form1_Shown);
-            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Form1_KeyDown);
             ((System.ComponentModel.ISupportInitialize)(this.Canvas)).EndInit();
             this.ResumeLayout(false);
 
@@ -81,6 +87,7 @@
         private System.Windows.Forms.PictureBox Canvas;
         private System.Windows.Forms.Timer DrawTimer;
         private System.Windows.Forms.Timer GhostTimer;
+        private System.Windows.Forms.Timer KeyPressedTimer;
     }
 }
 

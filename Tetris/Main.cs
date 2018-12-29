@@ -4,14 +4,24 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Windows.Input;
 
 namespace Tetris
 {
     public partial class Form1 : Form
     {
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool GetKeyboardState(byte[] lpKeyState);
+
+        bool[] PreviousKeys = new bool[8];
+        int LeftStartHold = 0, RightStartHold = 0, UpStartHold = 0, DownStartHold = 0;
+        int DAS = 117, ARR = 17;
+
         #region variable declarations
 
         int i = (int)Blocks.S; //only for testing
@@ -63,7 +73,7 @@ namespace Tetris
 
         #region Form Events
 
-        private void Canvas_MouseDown(object sender, MouseEventArgs e)
+        private void Canvas_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
         {
             drawing = true;
             GhostTimer.Stop(); //don't draw ghostblocks if currently drawing real blocks
@@ -73,7 +83,7 @@ namespace Tetris
             DrawTimer.Start(); //starts drawing
         }
 
-        private void Canvas_MouseUp(object sender, MouseEventArgs e)
+        private void Canvas_MouseUp(object sender, System.Windows.Forms.MouseEventArgs e)
         {
             drawing = false;
             DrawTimer.Stop(); //stops drawing
@@ -116,7 +126,7 @@ namespace Tetris
             g.DrawImage(Game.image, 0, 0); //draws to Canvas
         }
 
-        private void Form1_MouseWheel(object sender, MouseEventArgs e) //scroll
+        private void Form1_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e) //scroll
         {
             if (e.Delta > 0) //scroll up
             {
@@ -151,45 +161,63 @@ namespace Tetris
             Game.NextPiece();
         }
 
-        private void Form1_KeyDown(object sender, KeyEventArgs e)
+        private void KeyPressedTimer_Tick(object sender, EventArgs e)
         {
-            int Action = Keys.EvaluateKey(e.KeyValue);
             bool temp;
-            switch (Action)
+            /*
+            //this can later be used to get custom controls
+            for (byte i = 1; i != 0; i++)
             {
-                case (int)Actions.HardDrop:
-                    Game.Harddrop(Piece.FromAnchorPoint(), Piece.Pos, Piece.Piece);
-                    Piece.Pos = (5, 0);
-                    Piece.TempPos = (5, 0);
-                    Piece.currentRotation = 0;
-                    Piece.previousRotation = 0;
-                    Piece.SetBlock(Game.NextPiece());
-                    Piece.UpdatePiece(Game.CheckCollision(Piece.FromAnchorPoint(), Piece.Pos, Piece.Piece));
-                    break;
-                case (int)Actions.Right:
+                if (Keyboard.IsKeyDown((Key)i))
+                {
+                    MessageBox.Show(i.ToString());
+                }
+            }
+            */
+            if (Keyboard.IsKeyDown((Key)Keys.Keys[(int)Actions.Left]))
+            {
+                if (!PreviousKeys[(int)Actions.Left])
+                {
+                    LeftStartHold = Environment.TickCount;
+                }
+                else
+                {
+                    //uhh redo with one main game timer and cleaner code btw
+                }
+                Piece.TempPos.x--;
+                if (Game.CheckCollision(Piece.FromAnchorPoint(), Piece.TempPos, Piece.Piece))
+                {
+                    Piece.Pos.x--;
+                }
+                else
+                {
                     Piece.TempPos.x++;
-                    if (Game.CheckCollision(Piece.FromAnchorPoint(), Piece.TempPos, Piece.Piece))
-                    {
-                        Piece.Pos.x++;
-                    }
-                    else
-                    {
-                        Piece.TempPos.x--;
-                    }
-                    break;
-                case (int)Actions.Left:
+                }
+                Game.CheckCollision(Piece.FromAnchorPoint(), Piece.TempPos, Piece.Piece);
+                PreviousKeys[(int)Actions.Left] = true;
+            }
+            else PreviousKeys[(int)Actions.Left] = false;
+
+            if (Keyboard.IsKeyDown((Key)Keys.Keys[(int)Actions.Right]))
+            {
+                Piece.TempPos.x++;
+                if (Game.CheckCollision(Piece.FromAnchorPoint(), Piece.TempPos, Piece.Piece))
+                {
+                    Piece.Pos.x++;
+                }
+                else
+                {
                     Piece.TempPos.x--;
-                    if (Game.CheckCollision(Piece.FromAnchorPoint(), Piece.TempPos, Piece.Piece))
-                    {
-                        Piece.Pos.x--;
-                    }
-                    else
-                    {
-                        Piece.TempPos.x++;
-                    }
-                    Game.CheckCollision(Piece.FromAnchorPoint(), Piece.TempPos, Piece.Piece);
-                    break;
-                case (int)Actions.RotateCCW:
+                }
+                Game.CheckCollision(Piece.FromAnchorPoint(), Piece.TempPos, Piece.Piece);
+                PreviousKeys[(int)Actions.Right] = true;
+            }
+            else PreviousKeys[(int)Actions.Right] = false;
+
+            if (Keyboard.IsKeyDown((Key)Keys.Keys[(int)Actions.RotateCCW]))
+            {
+                if (!PreviousKeys[(int)Actions.RotateCCW])
+                {
                     Piece.RotateCounterClockwise();
                     temp = false;
                     while (!temp)
@@ -209,8 +237,15 @@ namespace Tetris
                         }
                     }
                     Game.CheckCollision(Piece.FromAnchorPoint(), Piece.TempPos, Piece.Piece);
-                    break;
-                case (int)Actions.RotateCW:
+                }
+                PreviousKeys[(int)Actions.RotateCCW] = true;
+            }
+            else PreviousKeys[(int)Actions.RotateCCW] = false;
+
+            if (Keyboard.IsKeyDown((Key)Keys.Keys[(int)Actions.RotateCW]))
+            {
+                if (!PreviousKeys[(int)Actions.RotateCW])
+                {
                     Piece.RotateClockwise();
                     temp = false;
                     while (!temp)
@@ -230,38 +265,72 @@ namespace Tetris
                         }
                     }
                     Game.CheckCollision(Piece.FromAnchorPoint(), Piece.TempPos, Piece.Piece);
-                    break;
-                case (int)Actions.SoftDrop:
-                    Piece.TempPos.y++;
-                    if (Game.CheckCollision(Piece.FromAnchorPoint(), Piece.TempPos, Piece.Piece))
-                    {
-                        Piece.Pos.y++;
-                    }
-                    else
-                    {
-                        Piece.TempPos.y--;
-                    }
-                    break;
-                case (int)Actions.Up:
+                }
+                PreviousKeys[(int)Actions.RotateCW] = true;
+            }
+            else PreviousKeys[(int)Actions.RotateCW] = false;
+
+            if (Keyboard.IsKeyDown((Key)Keys.Keys[(int)Actions.SoftDrop]))
+            {
+                Piece.TempPos.y++;
+                if (Game.CheckCollision(Piece.FromAnchorPoint(), Piece.TempPos, Piece.Piece))
+                {
+                    Piece.Pos.y++;
+                }
+                else
+                {
                     Piece.TempPos.y--;
-                    if (Game.CheckCollision(Piece.FromAnchorPoint(), Piece.TempPos, Piece.Piece))
-                    {
-                        Piece.Pos.y--;
-                    }
-                    else
-                    {
-                        Piece.TempPos.y++;
-                    }
-                    break;
-                case (int)Actions.Hold:
+                }
+                PreviousKeys[(int)Actions.SoftDrop] = true;
+            }
+            else PreviousKeys[(int)Actions.SoftDrop] = false;
+
+            if (Keyboard.IsKeyDown((Key)Keys.Keys[(int)Actions.Up]))
+            {
+                Piece.TempPos.y--;
+                if (Game.CheckCollision(Piece.FromAnchorPoint(), Piece.TempPos, Piece.Piece))
+                {
+                    Piece.Pos.y--;
+                }
+                else
+                {
+                    Piece.TempPos.y++;
+                }
+                PreviousKeys[(int)Actions.Up] = true;
+            }
+            else PreviousKeys[(int)Actions.Up] = false;
+
+            if (Keyboard.IsKeyDown((Key)Keys.Keys[(int)Actions.Hold]))
+            {
+                if (!PreviousKeys[(int)Actions.Hold])
+                {
                     Piece.SetBlock((byte)i);
                     Piece.Pos = (5, 0);
                     Piece.TempPos = (5, 0);
                     Piece.currentRotation = 0;
                     Piece.previousRotation = 0;
                     Piece.UpdatePiece(Game.CheckCollision(Piece.FromAnchorPoint(), Piece.Pos, Piece.Piece));
-                    break;
+                }
+                PreviousKeys[(int)Actions.Hold] = true;
             }
+            else PreviousKeys[(int)Actions.Hold] = false;
+
+            if (Keyboard.IsKeyDown((Key)Keys.Keys[(int)Actions.HardDrop]))
+            {
+                if (!PreviousKeys[(int)Actions.HardDrop])
+                {
+                    Game.Harddrop(Piece.FromAnchorPoint(), Piece.Pos, Piece.Piece);
+                    Piece.Pos = (5, 0);
+                    Piece.TempPos = (5, 0);
+                    Piece.currentRotation = 0;
+                    Piece.previousRotation = 0;
+                    Piece.SetBlock(Game.NextPiece());
+                    Piece.UpdatePiece(Game.CheckCollision(Piece.FromAnchorPoint(), Piece.Pos, Piece.Piece));
+                }
+                PreviousKeys[(int)Actions.HardDrop] = true;
+            }
+            else PreviousKeys[(int)Actions.HardDrop] = false;
+
             g.DrawImage(Game.image, 0, 0);
         }
     }
