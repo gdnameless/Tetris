@@ -33,6 +33,7 @@
             this.DrawTimer = new System.Windows.Forms.Timer(this.components);
             this.GhostTimer = new System.Windows.Forms.Timer(this.components);
             this.KeyPressedTimer = new System.Windows.Forms.Timer(this.components);
+            this.MainGameTimer = new System.Windows.Forms.Timer(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.Canvas)).BeginInit();
             this.SuspendLayout();
             // 
@@ -61,9 +62,13 @@
             // 
             // KeyPressedTimer
             // 
-            this.KeyPressedTimer.Enabled = true;
             this.KeyPressedTimer.Interval = 1;
             this.KeyPressedTimer.Tick += new System.EventHandler(this.KeyPressedTimer_Tick);
+            // 
+            // MainGameTimer
+            // 
+            this.MainGameTimer.Interval = 16;
+            this.MainGameTimer.Tick += new System.EventHandler(this.MainGameTimer_Tick);
             // 
             // Form1
             // 
@@ -88,6 +93,7 @@
         private System.Windows.Forms.Timer DrawTimer;
         private System.Windows.Forms.Timer GhostTimer;
         private System.Windows.Forms.Timer KeyPressedTimer;
+        private System.Windows.Forms.Timer MainGameTimer;
     }
 }
 

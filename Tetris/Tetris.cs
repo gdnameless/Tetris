@@ -29,7 +29,7 @@ namespace Tetris
             garbage
         } //all the used blocks
 
-        byte[,] VisibleBoard, Fullboard, GhostBoard; //Values in board determine the block type, one board for regular blocks, one for ghostblocks
+        public byte[,] VisibleBoard, Fullboard, GhostBoard; //Values in board determine the block type, one board for regular blocks, one for ghostblocks
 
         (int x, int y) LastGhost; //keeps track of last ghostblock
 
@@ -293,7 +293,7 @@ namespace Tetris
             if (Redraw)
             {
 
-                RedrawBoard(y); //redraws the board
+                //RedrawBoard(y); //redraws the board
             }
         }
 
@@ -317,7 +317,7 @@ namespace Tetris
             }
             if (Updated)
             {
-                RedrawBoard(Size.Height); //redraws the board
+                //RedrawBoard(Size.Height); //redraws the board
             }
         }
 
@@ -412,7 +412,7 @@ namespace Tetris
                 {
                     UpdateTetrominoBlock((Tetromino[i].x + Pos.x, Tetromino[i].y + Pos.y), Piece);
                 }
-                RedrawBoard();
+                //RedrawBoard();
             }
             catch
             {
